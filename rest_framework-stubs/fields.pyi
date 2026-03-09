@@ -30,7 +30,7 @@ from django.db import models
 from rest_framework.serializers import BaseSerializer
 
 class _Empty(Enum):
-    sentinel: Literal[0]
+    sentinel = 0
 
 empty: Final[Literal[_Empty.sentinel]]
 

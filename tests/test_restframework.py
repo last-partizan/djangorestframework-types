@@ -1,9 +1,11 @@
 from typing import Sequence
 
+from django.db.models import Model
 from rest_framework.decorators import permission_classes
 from rest_framework.filters import FilterBackendProtocol
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.serializers import Serializer
 from rest_framework.test import APIClient
 from typing_extensions import assert_type
 
@@ -34,11 +36,21 @@ def test_filter_backends_types() -> None:
             filterset = self.get_filterset(request, queryset, view)  # type: ignore
             return filterset.qs
 
-    class BookAPIView(GenericAPIView):
+    class BookModel(Model):
+        pass
+
+    class BookAPIView(GenericAPIView[BookModel]):
         filter_backends = (DjangoFilterBackend,)
+
+    class EmptySerializer(Serializer):
+        pass
+
+    class UnspecifiedAPIView(GenericAPIView):
+        serializer_class = EmptySerializer
 
     # mypy and pyright works differently here:
     # mypy: Expression is of type "tuple[type[DjangoFilterBackend]]", not "Sequence[type[FilterBackendProtocol]]"  [assert-type]
     # Disable this check for now in mypy.
     # At least assigning to filter_backends works fine, that's our main concern here.
     assert_type(BookAPIView.filter_backends, Sequence[type[FilterBackendProtocol]])  # type: ignore[assert-type]
+    assert_type(UnspecifiedAPIView.serializer_class, type[EmptySerializer])
